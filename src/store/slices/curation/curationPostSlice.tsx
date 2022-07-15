@@ -8,22 +8,28 @@ import {
 import axios from 'axios';
 
 const initialState: ICurationPostLists = {
-  CurationPostLists: [],
+  message: '',
+  data: {
+    next: '',
+    previous: '',
+    results: [],
+  },
   pending: false,
 };
 
 // createAsyncThunk(typePrefix: string, payloadCreator: AsyncThunkPayloadCreator, options?: AsyncThunkOptions): AsyncThunk
 export const getCurationPostListsThunk = createAsyncThunk(
   'curation/getCurationPostLists',
-  async () => {
+  async (thunkAPI) => {
     const response = await axios.get('/feed/');
     if (!response) {
       console.log('error');
     }
-    return response.data.results;
+    return response.data;
   }
 );
 
+// initialState에서 나눈대로 데이터 패칭하기... 꼭 ....
 export const curationPostSlice = createSlice({
   name: 'curation',
   initialState,
@@ -34,12 +40,16 @@ export const curationPostSlice = createSlice({
         state.pending = true;
       })
       .addCase(getCurationPostListsThunk.fulfilled, (state, action) => {
-        state.CurationPostLists = action.payload as ICurationPost[];
+        state.message = action.payload.message;
+        state.data = action.payload.data;
+        state.pending = action.payload.pending;
         state.pending = false;
+        // console.log(state);
+        // console.log(state.data.results);
       })
       .addCase(getCurationPostListsThunk.rejected, (state, action) => {
         state.pending = false;
-        //error 처리 필요
+        console.error(action.error);
       });
   },
 });
