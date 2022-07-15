@@ -9,13 +9,15 @@ import { createWrapper, HYDRATE } from 'next-redux-wrapper';
 import curationReducer from '@slices/curation/curationPostSlice';
 import mbtiReducer from '@slices/mbti/mbtiSlice';
 import userReducer from '@slices/user/userSlice';
+import scrapReducer from '@slices/scrap/scrapSlice';
 const preloadedState = {};
 
 export const store = configureStore({
   reducer: {
     curation: curationReducer,
     user: userReducer,
-    mbti: mbtiReducer.reducer,
+    mbti: mbtiReducer,
+    scrap: scrapReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
   devTools: process.env.NODE_ENV !== 'production',
