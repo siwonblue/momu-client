@@ -1,11 +1,13 @@
 import type { NextPage } from 'next';
 import { RootState, useAppDispatch, useAppSelector } from 'store/store';
 import { useRouter } from 'next/router';
+import axios from 'axios';
 
 const Home: NextPage = () => {
   const router = useRouter();
-  const redirect = process.env.KAKAO_REDIRECT_URI;
-  const apiKey = process.env.KAKAO_REST_API_KEY;
+
+  const redirect = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const apiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
 
   return (
     <>
@@ -32,7 +34,7 @@ const Home: NextPage = () => {
         <button
           onClick={() =>
             router.push(
-              `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.KAKAO_REST_API_KEY}&redirect_uri=${process.env.KAKAO_REDIRECT_URI}`
+              `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}&redirect_uri=${process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI}`
             )
           }
         >
