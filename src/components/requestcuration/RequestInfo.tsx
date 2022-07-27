@@ -1,84 +1,265 @@
-import { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ButtonContainer, ChoiceButton } from 'styles/CommonStyle';
+import useCheckLength from 'utils/hooks/useCheckLength';
+import { useSelector } from 'react-redux';
+import { RootState, useAppDispatch } from '../../store/store';
+import { addCurationSlice } from '@slices/curation/addCurationSlice';
+import {
+  BackButton,
+  BackIcon,
+  HeaderContainer,
+  HeaderLeftSide,
+  HeaderTextContainer,
+  Line,
+} from '../../styles/headerstyle/HeaderCommonStyle';
+import { useRouter } from 'next/router';
+import { addCurationData } from '@slices/curation/addCurationThunk';
+import { onClickTime } from 'utils/common/onClickTime';
+import { onClickDrink } from 'utils/common/onClickDrink';
+import { onClickCount } from 'utils/common/onClickCount';
+import { onChangeLocation } from 'utils/common/onChangeLocation';
 
 const RequestInfo = () => {
-  const [color, setColor] = useState('');
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { additionalComment, handleInputLength } = useCheckLength();
+  const [text, setText] = useState('');
 
-  const onClick = () => {
-    color === '' ? setColor('#86B9FD') : setColor('');
+  const { sinchon } = useSelector(
+    (state: RootState) => state.addCuration.location
+  );
+  const { changchon } = useSelector(
+    (state: RootState) => state.addCuration.location
+  );
+  const { morning } = useSelector((state: RootState) => state.addCuration.time);
+  const { afternoon } = useSelector(
+    (state: RootState) => state.addCuration.time
+  );
+  const { evening } = useSelector((state: RootState) => state.addCuration.time);
+  const { midnight } = useSelector(
+    (state: RootState) => state.addCuration.time
+  );
+  const { not } = useSelector((state: RootState) => state.addCuration.drink);
+  const { little } = useSelector((state: RootState) => state.addCuration.drink);
+  const { much } = useSelector((state: RootState) => state.addCuration.drink);
+
+  const { alone } = useSelector(
+    (state: RootState) => state.addCuration.member_count
+  );
+  const { two } = useSelector(
+    (state: RootState) => state.addCuration.member_count
+  );
+  const { three } = useSelector(
+    (state: RootState) => state.addCuration.member_count
+  );
+  const { moreThanFive } = useSelector(
+    (state: RootState) => state.addCuration.member_count
+  );
+  const data = useSelector((state: RootState) => state.addCuration.data);
+  const status = useSelector((state: RootState) => state.addCuration.status);
+
+  //backbutton 클릭하거나 완료 버튼 클릭시 state reset
+  const resetState = () => {
+    dispatch(addCurationSlice.actions.resetLocation());
+    dispatch(addCurationSlice.actions.resetActiveInTime());
+    dispatch(addCurationSlice.actions.resetActiveInDrink());
+    dispatch(addCurationSlice.actions.resetActiveInCount());
+
+    setText('');
+  };
+
+  const onChangeDescription = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleInputLength(e, 25);
+
+      setText(e.target.value);
+    },
+
+    [text]
+  );
+
+  // 분리 해줘야 description 데이터 넘어감
+  useEffect(() => {
+    dispatch(addCurationSlice.actions.onClickComplete(text));
+  }, [text]);
+
+  const onClickSubmit = (e: React.SyntheticEvent) => {
+    if (data.location === '') {
+      return alert('장소를 선택해 주세요!1');
+    }
+    if (data.location === '신촌,홍대 부근 동네를 선택해주세요!') {
+      return alert('장소를 선택해 주세요!2');
+    }
+
+    dispatch(addCurationData(data));
+
+    if (status === 'success') {
+      router.push('/feed');
+    }
+
+    resetState();
+  };
+
+  console.log(data);
+
+  const onClickBackButton = () => {
+    router.back();
+    resetState();
   };
 
   return (
-    <Wrapper>
-      <ChooseArea>
-        <QuestionText>어느 지역에서 식사하실 건가요?</QuestionText>
-        <AreaDropdown>
-          <option>신촌,홍대 부근 동네를 선택해주세요!</option>
-          <option>신촌동</option>
-          <option>창천동</option>
-        </AreaDropdown>
-      </ChooseArea>
-      <ChooseTime>
-        <QuestionText>방문 예정 시간대를 골라주세요!</QuestionText>
+    <>
+      <HeaderContainer>
+        <HeaderLeftSide>
+          <BackButton onClick={onClickBackButton}>
+            <BackIcon src={'/img/header/backbutton.svg'} />
+          </BackButton>
+          <HeaderTextContainer>Request</HeaderTextContainer>
+        </HeaderLeftSide>
+        <SubmitButton onClick={onClickSubmit}>완료</SubmitButton>
+      </HeaderContainer>
+      <Line></Line>
+      <Wrapper>
+        <ChooseArea>
+          <QuestionText>어느 지역에서 식사하실 건가요?</QuestionText>
+          <AreaDropdown
+            onChange={(e: any) => {
+              onChangeLocation(e, dispatch);
+            }}
+          >
+            <option>신촌,홍대 부근 동네를 선택해주세요!</option>
+            <option>신촌동</option>
+            <option>창천동</option>
+            <option>연희동</option>
+            <option>대현동</option>
+            <option>대신동</option>
+            <option>연남동</option>
+            <option>서교동</option>
+            <option>동교동</option>
+            <option>합정동</option>
+            <option>망원동</option>
+            <option>상수동</option>
+          </AreaDropdown>
+        </ChooseArea>
+        <ChooseTime>
+          <QuestionText>방문 예정 시간대를 골라주세요!</QuestionText>
 
-        <ButtonContainer>
-          <ChoiceButton color={color} onClick={onClick}>
-            아침
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            점심
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            저녁
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            밤
-          </ChoiceButton>
-        </ButtonContainer>
-      </ChooseTime>
-      <ChooseDrink>
-        <QuestionText>음주 여부를 선택해주세요!</QuestionText>
-        <ButtonContainer>
-          <ChoiceButton color={color} onClick={onClick}>
-            안 마셔요
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            간술만!
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            마실래요
-          </ChoiceButton>
-        </ButtonContainer>
-      </ChooseDrink>
-      <ChoosePersonnel>
-        <QuestionText>몇 명이서 방문 예정인가요?</QuestionText>
-        <ButtonContainer>
-          <ChoiceButton color={color} onClick={onClick}>
-            혼자
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            둘이서
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            3~4명
-          </ChoiceButton>
-          <ChoiceButton color={color} onClick={onClick}>
-            5인 이상
-          </ChoiceButton>
-        </ButtonContainer>
-      </ChoosePersonnel>
+          <ButtonContainer>
+            <ChoiceButton
+              active={morning}
+              onClick={(e: any) => {
+                onClickTime(e, dispatch);
+              }}
+            >
+              아침
+            </ChoiceButton>
+            <ChoiceButton
+              active={afternoon}
+              onClick={(e: any) => {
+                onClickTime(e, dispatch);
+              }}
+            >
+              점심
+            </ChoiceButton>
+            <ChoiceButton
+              active={evening}
+              onClick={(e: any) => {
+                onClickTime(e, dispatch);
+              }}
+            >
+              저녁
+            </ChoiceButton>
+            <ChoiceButton
+              active={midnight}
+              onClick={(e: any) => {
+                onClickTime(e, dispatch);
+              }}
+            >
+              밤
+            </ChoiceButton>
+          </ButtonContainer>
+        </ChooseTime>
+        <ChooseDrink>
+          <QuestionText>음주 여부를 선택해주세요!</QuestionText>
+          <ButtonContainer>
+            <ChoiceButton
+              active={not}
+              onClick={(e: any) => {
+                onClickDrink(e, dispatch);
+              }}
+            >
+              안 마셔요
+            </ChoiceButton>
+            <ChoiceButton
+              active={little}
+              onClick={(e: any) => {
+                onClickDrink(e, dispatch);
+              }}
+            >
+              간술만!
+            </ChoiceButton>
+            <ChoiceButton
+              active={much}
+              onClick={(e: any) => {
+                onClickDrink(e, dispatch);
+              }}
+            >
+              마실래요
+            </ChoiceButton>
+          </ButtonContainer>
+        </ChooseDrink>
+        <ChoosePersonnel>
+          <QuestionText>몇 명이서 방문 예정인가요?</QuestionText>
+          <ButtonContainer>
+            <ChoiceButton
+              active={alone}
+              onClick={(e: any) => {
+                onClickCount(e, dispatch);
+              }}
+            >
+              혼자
+            </ChoiceButton>
+            <ChoiceButton
+              active={two}
+              onClick={(e: any) => {
+                onClickCount(e, dispatch);
+              }}
+            >
+              둘이서
+            </ChoiceButton>
+            <ChoiceButton
+              active={three}
+              onClick={(e: any) => {
+                onClickCount(e, dispatch);
+              }}
+            >
+              3~4명
+            </ChoiceButton>
+            <ChoiceButton
+              active={moreThanFive}
+              onClick={(e: any) => {
+                onClickCount(e, dispatch);
+              }}
+            >
+              5인 이상
+            </ChoiceButton>
+          </ButtonContainer>
+        </ChoosePersonnel>
 
-      <AdditionalRequest>
-        <QuestionText>
-          추가 요청사항을 알려주세요! <Optional>(선택)</Optional>
-        </QuestionText>
-        <AdditionalInput
-          type="text"
-          placeholder="(25자 이내) 싫어하는 음식, 상황 등을 말씀해주세요!"
-        ></AdditionalInput>
-      </AdditionalRequest>
-    </Wrapper>
+        <AdditionalRequest>
+          <QuestionText>
+            추가 요청사항을 알려주세요! <Optional>(선택)</Optional>
+          </QuestionText>
+          <AdditionalInput
+            onChange={onChangeDescription}
+            type="text"
+            placeholder="(25자 이내) 싫어하는 음식, 상황 등을 말씀해주세요!"
+            value={text}
+          />
+        </AdditionalRequest>
+      </Wrapper>
+    </>
   );
 };
 
@@ -157,6 +338,15 @@ const AdditionalRequest = styled.div`
 `;
 
 const AdditionalInput = styled.input`
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 20px;
+  /* identical to box height, or 125% */
+
+  color: #191919;
+
   padding-left: 0;
   width: 343px;
   border: none;
@@ -171,4 +361,16 @@ const AdditionalInput = styled.input`
 
     color: #767676;
   }
+`;
+
+const SubmitButton = styled.button`
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 20px;
+  /* identical to box height, or 100% */
+
+  color: #999999;
+  margin-right: 24px;
 `;

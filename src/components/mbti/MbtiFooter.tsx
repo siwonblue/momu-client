@@ -8,6 +8,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { mbtiStageChecker } from 'utils/mbtiChecker';
 import { ToastContainer, toast } from 'react-toastify';
 import { mbtiSlice } from '@slices/mbti/mbtiSlice';
+import axios from 'axios';
 const MbtiFooter = () => {
   const router = useRouter();
   const stageNumber: number = Number(router.asPath.split('/')[2]);
@@ -113,10 +114,12 @@ const MbtiFooter = () => {
         const result9 = mbtiStageChecker(stage9);
         if (result9) {
           const mbti = mbtiCalculator(result);
+          // console.log('🔥🔥🔥', mbti);
 
           dispatch(mbtiSlice.actions.setMbti({ mbti })); // set front
           dispatch(addMbti({ mbti })); // set back db
           router.push(`/result/${mbti}`);
+
           break;
         } else {
           alert('값을 입력해주세요');

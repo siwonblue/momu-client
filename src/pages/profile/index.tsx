@@ -1,45 +1,134 @@
 import type { NextPage } from 'next';
 import { useSelector } from 'react-redux';
-import { RootState } from 'store/store';
+import { RootState, useAppDispatch } from 'store/store';
 import styled from 'styled-components';
 import { CSSProperties, useCallback, useEffect, useState } from 'react';
-import snug from '@public/img/mbti/snug1.png';
-import lively from '@public/img/mbti/lively1.png';
+import defaultProfile from '@public/img/defaultProfile.png';
+import camera from '@public/img/camera.png';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
+import { setProfile } from '@slices/profileSet/profileSetThunk';
+import { userInfo } from '@slices/user/userThunk';
+import { GetServerSideProps } from 'next';
+import axios from 'axios';
 
 const Home: NextPage = () => {
-  const [nickName, setNickName] = useState('');
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const [nickname, setNickname] = useState('');
   const [active, setActive] = useState(false);
-  const [url, setUrl] = useState('');
-  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value.length) {
-      setActive(true);
-    } else {
-      setActive(false);
-    }
+  const [imagePath, setImagePath] = useState<Blob | string>('');
+  const [createObjectURL, setCreateObjectURL] = useState<string | null>(null);
+  const status = useSelector((state: RootState) => state.profileSet.status);
 
-    if (e.target.value.length <= 10) {
-      setNickName(e.target.value);
-    }
-  }, []);
+  // useEffect(() => {
+  //   dispatch(userInfo());
+  // }, [status]);
 
-  const mbti = useSelector((state: RootState) => state.mbti.mbti);
-  const onChangePhotoUrl = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUrl(e.target.value);
+  // useEffect(() => {
+  //   if (me.data?.nickname) {
+  //     router.push('/profile/1');
+  //   }
+  // }, [me, status]);
+
+  const onChangeInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      // 정규 표현식 이용하여 한글 입력 방지
+      const notEngExp = /[^A-Za-z]/g;
+      const isNotEng = notEngExp.test(e.target.value);
+      if (isNotEng) {
+        alert('영어를 입력해주세요!');
+        e.preventDefault();
+        return;
+      }
+
+      // 버튼 색깔 바꿔주기
+      if (e.target.value.length) {
+        setActive(true);
+      } else {
+        setActive(false);
+      }
+
+      // 값이 10자 이내면 저장
+      if (e.target.value.length <= 10) {
+        setNickname(e.target.value);
+      }
+    },
+    [active, nickname]
+  );
+
+  const onChangeImages = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      // typeof e.target.files is Array-like Objects
+      if (e.target.files) {
+        // 값이 존재하면 백엔드로 보낼 데이터 업데이트
+        setImagePath(e.target.files[0]);
+
+        // Image src 에 들어갈 값 업데이트
+        const [file] = e.target.files;
+        if (file) {
+          setCreateObjectURL(URL.createObjectURL(file));
+        } else {
+          setCreateObjectURL(null);
+        }
+      }
+    },
+    [imagePath]
+  );
+
+  // 한글 입력 방지
+  const handleKeyDown = () => {};
+
+  const onSubmit = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    const ask = confirm(`${nickname}으로 등록하시겠습니까?`);
+    if (ask) {
+      const formData = new FormData();
+
+      formData.append('nickname', nickname);
+      formData.append('profile_img', imagePath);
+
+      dispatch(setProfile(formData));
+    }
   };
-  useEffect(() => {
-    console.log(url);
-  }, [url]);
 
-  // const onSubmit = () => {
-  //   const formData = new FormData();
-  //   formData.append('image', url);
-  //
-  //   dispatch({
-  //     type,
-  //     data: formData,
-  //   });
-  // };
+  const myLoader = ({ src, width, quality }: any) => {
+    return `${src}?w=${width}&q=${quality || 75}`;
+  };
+
+  const defaultImageStyle: CSSProperties = {
+    borderRadius: '50%',
+    background: '#EDEDED',
+  };
+  const ImagePositionBox: CSSProperties = {
+    position: 'absolute',
+    width: '88px',
+    height: '88px',
+    left: '16px',
+    top: '432px',
+  };
+  const RelativeBox: CSSProperties = {
+    position: 'relative',
+  };
+  const labelStyle: CSSProperties = {
+    cursor: 'pointer',
+    position: 'absolute',
+    bottom: '5px',
+    right: '0',
+    zIndex: '1',
+  };
+
+  // useEffect(() => {
+  //   console.log(imagePath);
+  // }, [imagePath]);
+
+  useEffect(() => {
+    if (status === 'success') {
+      // if (me.data.nickname) {
+      router.push('/profile/1');
+      // }
+    }
+  }, [status]);
 
   return (
     <>
@@ -49,37 +138,44 @@ const Home: NextPage = () => {
         모무에서 활동을 시작해보세요!
       </ServiceDescriptionText>
       <div style={NicknameText}>닉네임</div>
-      <NicknameInput
-        value={nickName}
-        onChange={onChange}
-        placeholder="10자 이내 영문으로 작성해주세요!"
-      />
-
-      <ProfileImageText>프로필 사진</ProfileImageText>
-
-      <form action="">
-        <input
-          type="file"
-          id="image-upload"
-          hidden
-          onChange={onChangePhotoUrl}
-          value={url}
+      <form
+        onSubmit={onSubmit}
+        encType="multipart/form-data"
+        autoComplete="off"
+      >
+        <NicknameInput
+          value={nickname}
+          onChange={onChangeInput}
+          placeholder="10자 이내 영문으로 작성해주세요!"
+          required
         />
-        <div style={{ width: '100px', height: '100px' }}>
-          {/*<Image src={`${lively || snug}`} alt="profile_image" />*/}
+        <ProfileImageText>프로필 사진</ProfileImageText>
+        <div style={ImagePositionBox}>
+          <div style={RelativeBox}>
+            <input
+              type="file"
+              id="image-upload"
+              hidden
+              onChange={onChangeImages}
+              pattern="[a-zA-Z0-9]"
+            />
+            <label htmlFor="image-upload" style={labelStyle}>
+              <Image width={25} height={20} src={camera}></Image>
+            </label>
+            <Image
+              loader={myLoader}
+              src={createObjectURL || defaultProfile}
+              width={100}
+              height={100}
+              style={defaultImageStyle}
+              objectFit="cover"
+            ></Image>
+          </div>
         </div>
-        <label
-          htmlFor="image-upload"
-          style={{
-            fontSize: '1.5rem',
-            color: '#716F88',
-            cursor: 'pointer',
-          }}
-        >
-          프로필 사진 변경
-        </label>
+        <NextButton active={active} disabled={!active}>
+          다음
+        </NextButton>
       </form>
-      <NextButton active={active}>다음</NextButton>
     </>
   );
 };
@@ -188,5 +284,7 @@ const NextButton = styled.button<{ active?: boolean }>`
 
   background: ${({ active }) => (active ? '#F57A08' : '#BFBFBF')};
 `;
+
+// @ts-ignore
 
 export default Home;

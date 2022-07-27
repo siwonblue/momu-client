@@ -1,19 +1,61 @@
 import styled from 'styled-components';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import Modal from 'react-modal';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import { RootState, useAppDispatch } from '../../store/store';
+import { userInfo } from '@slices/user/userThunk';
+import close from '@public/img/closeModal.png';
+import Korea from '@public/img/mbti/korea1.png';
+import Image from 'next/image';
+import {
+  Box,
+  ButtonContainer,
+  CloseButtonStyle,
+  CloseStyle,
+  ColorText,
+  ContentText,
+  HeaderBottomLine,
+  HeaderText1,
+  HeaderText2,
+  LeftBox,
+  LeftInnerBox,
+  LeftInnerDownBox,
+  LeftInnerUpBox,
+  NoneColorText,
+  RightBox,
+  RightInnerBox,
+  RightInnerDownBox,
+  RightInnerUpBox,
+  TitleText,
+} from '@mbti/mbtiStyle';
 
 const Mbti = () => {
   const router = useRouter();
-  const asPathArray = router.asPath.split('/');
-  const mbti = asPathArray[asPathArray.length - 1];
+  const dispatch = useAppDispatch();
+  // const asPathArray = router.asPath.split('/');
+  // const mbti = asPathArray[asPathArray.length - 1];
   // const mbti = useSelector((state: RootState) => state.mbti.mbti);
   const [second, setSecond] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalIsOpen, setIsOpen] = useState(false);
+  const [mbtiState, setMbtiState] = useState<string | undefined>('');
+  const [type, setType] = useState<string | undefined>('');
+
+  const me = useSelector((state: RootState) => state.user.me);
+  const mbti = me.data?.mbti;
+
+  useEffect(() => {
+    dispatch(userInfo());
+  }, []);
+
+  useEffect(() => {
+    if (me) {
+      setMbtiState(me.data?.mbti.mbti);
+      setType(me.data.mbti.type);
+    }
+  }, [me]);
 
   function openModal() {
     setIsOpen(true);
@@ -28,44 +70,164 @@ const Mbti = () => {
 
   return (
     <>
-      <Navbar>먹BTI 결과</Navbar>
-      <NavbarUnderLine />
       <Illustration />
       <CommentText>당신의 먹비티아이 유형은</CommentText>
       <CommentText second>
-        {mbti}
-        <span style={{ color: '#191919' }}>입니다.</span>
+        {mbtiState}({type})<span style={{ color: '#191919' }}> 입니다.</span>
       </CommentText>
+      <Description>{mbti?.description}</Description>
       <WhatIsMbti onClick={openModal}>먹비티아이란?</WhatIsMbti>
-      <Line></Line>
       <MomuStartButton onClick={pushToFeed}>모무 시작하기</MomuStartButton>
 
-      <div style={{ position: 'relative' }}>
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={{
-            overlay: {
-              background: 'none',
-            },
-            content: {
-              position: 'absolute',
-              color: 'lightsteelblue',
-              width: '335px',
-              height: '723px',
-              top: '72px',
-
-              margin: 'auto',
-            },
-          }}
-        >
-          <button onClick={closeModal}>close</button>
-          <div>I am a modal</div>
-        </Modal>
-      </div>
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        style={{
+          overlay: {
+            background: '#727272',
+          },
+          content: {
+            position: 'absolute',
+            width: '335px',
+            height: '723px',
+            top: '16px',
+            margin: '0 auto 0 auto',
+          },
+        }}
+      >
+        <Wrapper>
+          <Header>
+            <ButtonContainer>
+              <CloseStyle>
+                <CloseButtonStyle onClick={closeModal}>
+                  <Image src={close} />
+                </CloseButtonStyle>
+              </CloseStyle>
+            </ButtonContainer>
+            <HeaderText1>먹BTI는</HeaderText1>
+            <HeaderText2>
+              MBTI와 유사한 모무만의 맛집 취향 유형입니다.
+            </HeaderText2>
+            <HeaderBottomLine />
+          </Header>
+          <Article>
+            {kindOfMbti.map((c) => {
+              return (
+                <>
+                  <Container>
+                    <TitleText>{c.title}</TitleText>
+                    <ContentText>{c.content}</ContentText>
+                    <Box>
+                      <LeftBox>
+                        <LeftInnerBox>
+                          <LeftInnerUpBox>
+                            <ColorText>{c.typeLeft[0]}</ColorText>
+                            <NoneColorText>{c.typeLeft.slice(1)}</NoneColorText>
+                          </LeftInnerUpBox>
+                          <LeftInnerDownBox>
+                            {c.typeLeftDescription}
+                          </LeftInnerDownBox>
+                        </LeftInnerBox>
+                      </LeftBox>
+                      <RightBox>
+                        <RightInnerBox>
+                          <RightInnerUpBox>
+                            <ColorText>{c.typeRight[0]}</ColorText>
+                            <NoneColorText>
+                              {c.typeRight.slice(1)}
+                            </NoneColorText>
+                          </RightInnerUpBox>
+                          <RightInnerDownBox>
+                            {c.typeRightDescription}
+                          </RightInnerDownBox>
+                        </RightInnerBox>
+                      </RightBox>
+                    </Box>
+                  </Container>
+                </>
+              );
+            })}
+          </Article>
+        </Wrapper>
+      </Modal>
     </>
   );
 };
+
+const Article = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const kindOfMbti = [
+  {
+    title: '새로움에 대한 자세',
+    content: '새로운 음식, 도전하는 것을 즐기는가?',
+    typeLeft: 'NEW',
+    typeLeftDescription: '새로움을 추구하는',
+    typeRight: 'CAREFUL',
+    typeRightDescription: '신중한, 조심스러운',
+  },
+  {
+    title: '선호하는 공간',
+    content: '좋아하는 공간의 분위기, 특성이 어떤가요?',
+    typeLeft: 'OPEN',
+    typeLeftDescription: '개방적인, 활기찬',
+    typeRight: 'INDIVIDUAL',
+    typeRightDescription: '개인적인, 조용한',
+  },
+  {
+    title: '만족의 기준',
+    content: '음식의 맛이 중요한가요? 서비스, 분위기 등도 중요한가요?',
+    typeLeft: 'TASTE',
+    typeLeftDescription: '맛 중심',
+    typeRight: 'MOOD',
+    typeRightDescription: '분위기 중심',
+  },
+  {
+    title: '매운 음식을 먹는 정도',
+    content: '매운 음식을 잘 먹는가요? 잘 못 먹는가요?',
+    typeLeft: 'MAEPJALR',
+    typeLeftDescription: '맵잘알',
+    typeRight: 'MAEPJJIL',
+    typeRightDescription: '맵찔이',
+  },
+];
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+`;
+
+const Description = styled.div`
+  position: absolute;
+  width: 256px;
+  height: 92px;
+  left: 59px;
+  top: 394px;
+
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 23px;
+  /* or 153% */
+
+  text-align: center;
+
+  color: #191919;
+`;
 
 const Navbar = styled.div`
   position: absolute;
@@ -89,31 +251,31 @@ const NavbarUnderLine = styled.div`
   height: 0px;
   left: 0px;
   top: 56px;
-
   border-bottom: 1px solid #000000;
 `;
 const Illustration = styled.div`
   position: absolute;
-  width: 120px;
-  height: 120px;
-  left: 16px;
-  top: 84px;
-
+  width: 160px;
+  height: 160px;
+  left: 107px;
+  top: 100px;
   background: #d9d9d9;
 `;
 
 const CommentText = styled.span<{ second?: boolean }>`
   position: absolute;
-  width: 305px;
+  width: 325px;
   height: 72px;
-  left: 16px;
-  top: ${({ second }) => (second ? '260px;' : '220px;')}
+  left: 25px;
+  
+  top: ${({ second }) => (second ? '340px;' : '300px;')}
 
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 700;
   font-size: 24px;
   line-height: 36px;
+  text-align : center;
   /* or 150% */
 
   color:${({ second }) => (second ? '#F57906' : '#191919')} ;
@@ -123,19 +285,19 @@ const WhatIsMbti = styled.div`
   position: absolute;
   width: 92px;
   height: 36px;
-  left: 16px;
-  top: 475px;
+  left: 141px;
+  top: 516px;
 
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 600;
   font-size: 16px;
-  line-height: 48px;
+  line-height: 36px;
   /* identical to box height, or 225% */
 
-  border-bottom: 2px solid #191919;
+  text-decoration-line: underline;
 
-  color: #191919;
+  color: #989898;
 `;
 const Line = styled.div`
   position: absolute;
@@ -150,25 +312,18 @@ const Line = styled.div`
 const MomuStartButton = styled.button`
   position: absolute;
   width: 343px;
-  height: 44px;
-  left: 14px;
-  top: 553px;
+  height: 56px;
+  left: 16px;
+  top: 656px;
 
   background: #f57906;
+
   color: #ffffff;
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 20px;
 `;
-
-//@ts-ignore
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  try {
-    const { query } = context;
-
-    return {
-      props: { query },
-    };
-  } catch (error) {
-    console.error(error);
-  }
-};
 
 export default Mbti;
