@@ -40,6 +40,7 @@ interface ICommentPost {
     select_count: number;
   };
   post: number; // # 요청한 큐레이션의 id
+  post_user: number;
   place: {
     //# 등록된 식당 정보
     id: number; //# 장소 모델 id
@@ -57,6 +58,7 @@ interface ICommentPost {
   visit_flag: boolean;
   description: string;
   select_flag: boolean; //# 해당 답글의 채택 여부
+  created_at: string;
 }
 
 interface ICommentPostLists {

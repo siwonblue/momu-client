@@ -1,8 +1,18 @@
-import { FC } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image';
+import { DivisionLine } from 'styles/commentstyle/CommentStyle';
+import { RootState, useAppDispatch, useAppSelector } from 'store/store';
+import {
+  postSelectedStateThunk,
+  deleteSelectedStateThunk,
+} from '@slices/select/selectSlice';
+import { userInfo } from '@slices/user/userThunk';
 
 interface Props {
+  userId: number;
+  commentId: number;
+  postId: number;
   selectedFlag: boolean;
   placeImg: string;
   writerName: string;
@@ -12,9 +22,13 @@ interface Props {
   placeName: string;
   placeAddress: string;
   placeCategory: string;
+  createAt: string;
 }
 
 const CommentCard: FC<Props> = ({
+  userId,
+  postId,
+  commentId,
   selectedFlag,
   placeImg,
   writerName,
@@ -24,96 +38,165 @@ const CommentCard: FC<Props> = ({
   placeName,
   placeAddress,
   placeCategory,
+  createAt,
 }) => {
+  const [selectedState, setSelectedState] = useState(selectedFlag);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state: RootState) => state.user.me.data.id);
+
+  useEffect(() => {
+    dispatch(userInfo());
+  }, []);
+
+  function ButtonChoice() {
+    if (selectedState === true && user === userId) {
+      return <img src={'/img/select/SelectedButton.svg'} />;
+    } else if (selectedState === false && user === userId) {
+      return <img src={'/img/select/unSelectedButton.svg'} />;
+    }
+    if (selectedState === true && user !== userId) {
+      return <img src={'/img/select/OtherUserSelectedButton.svg'} />;
+    } else if (selectedState === false && user !== userId) {
+      return <></>;
+    }
+  }
+
+  const onClick = useCallback(() => {
+    if (selectedState === true && user === userId) {
+      setSelectedState(false);
+    } else if (selectedState === false && user === userId)
+      setSelectedState(true);
+    if (selectedState === true && user === userId) {
+      dispatch(deleteSelectedStateThunk({ postId, commentId }));
+    } else if (selectedState === false && user === userId)
+      dispatch(postSelectedStateThunk({ postId, commentId }));
+  }, [selectedState]);
+
   return (
-    <Wrapper>
-      <PlaceImgContainer>
-        {/* src placeImg로 변경 필요 */}
-        {placeImg === null ? (
-          <></>
-        ) : (
-          <Image
-            src={'/img/TestImg.jpg'}
-            width={'343'}
-            height={'206'}
-            objectFit="cover"
-          />
-        )}
-      </PlaceImgContainer>
-      <BottomContainer>
-        <UserInfo>
-          <ProfileImgContainer>
-            {/* src writerProfile로 변경 필요 */}
+    <>
+      <Wrapper>
+        <PlaceImgContainer>
+          {placeImg === null ? (
+            <></>
+          ) : (
             <Image
-              src={'/img/ProfileTest.png'}
-              width={'28'}
-              height={'28'}
+              src={placeImg}
+              width={'343'}
+              height={'206'}
               objectFit="cover"
             />
-          </ProfileImgContainer>
-          <UserNickName>{writerName}</UserNickName>
-          <UserMbti>ENFJ</UserMbti>
-          <WrittenDate>2021.07.27</WrittenDate>
-        </UserInfo>
-        <DescriptionText>{description}</DescriptionText>
-        <>
-          <PlaceContainer>
-            <PlaceName>{placeName}</PlaceName>
-            <PlaceAddress>{placeAddress}</PlaceAddress>
-          </PlaceContainer>
-          <SelectedButton></SelectedButton>
-        </>
-      </BottomContainer>
-    </Wrapper>
+          )}
+        </PlaceImgContainer>
+        <BottomContainer>
+          <UserInfo>
+            <UserContainer>
+              <ProfileImgContainer>
+                {writerProfile === null ? (
+                  <Image
+                    src={'/img/defaultProfile.png'}
+                    width={'28'}
+                    height={'28'}
+                    objectFit="cover"
+                  />
+                ) : (
+                  <Image
+                    src={writerProfile}
+                    width={'28'}
+                    height={'28'}
+                    objectFit="cover"
+                  />
+                )}
+              </ProfileImgContainer>
+              <UserNickName>{writerName}</UserNickName>
+              <LineImg src={'/img/Line.png'} />
+              <UserMbti>{writerMbti}</UserMbti>
+            </UserContainer>
+            <WrittenDate>{createAt}</WrittenDate>
+          </UserInfo>
+          <DescriptionText>{description}</DescriptionText>
+          <PlaceInfoBox>
+            <PlaceContainer>
+              <CategoryContainer>
+                <PlaceName>{placeName}</PlaceName>
+                <CategoryName>{placeCategory}</CategoryName>
+              </CategoryContainer>
+              <PlaceAddress>{placeAddress}</PlaceAddress>
+            </PlaceContainer>
+            <ButtonContainer>
+              <SelectedButton onClick={onClick}>
+                {ButtonChoice()}
+              </SelectedButton>
+            </ButtonContainer>
+          </PlaceInfoBox>
+        </BottomContainer>
+        <DivisionLine></DivisionLine>
+      </Wrapper>
+    </>
   );
 };
 
 export default CommentCard;
 
 const Wrapper = styled.div``;
-const PlaceImgContainer = styled.div``;
+const PlaceImgContainer = styled.div`
+  padding-top: 23px;
+`;
 const BottomContainer = styled.div``;
 
-const UserInfo = styled.div`
-  height: 52px;
+const UserContainer = styled.div`
   display: flex;
+`;
+const UserInfo = styled.div`
+  margin: 12px 0;
+  display: flex;
+  justify-content: space-between;
 `;
 const ProfileImgContainer = styled.div`
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  overflow: hidden;
 `;
 const UserNickName = styled.div`
+  padding-left: 10px;
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 700;
   font-size: 14px;
-  line-height: 17px;
+  line-height: 28px;
   /* identical to box height */
 
   color: #191919;
+`;
+
+const LineImg = styled.img`
+  padding: 2px 8px 0 8px;
+  height: 15px;
+  margin-top: 5px;
 `;
 const UserMbti = styled.div`
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 700;
   font-size: 14px;
-  line-height: 17px;
+  line-height: 28px;
   /* identical to box height */
 
   color: #2260d8;
 `;
 const WrittenDate = styled.div`
+  padding-right: 10px;
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 500;
   font-size: 11px;
-  line-height: 17px;
+  line-height: 28px;
 
   color: #a09a9a;
 `;
 
 const DescriptionText = styled.div`
+  padding-bottom: 20px;
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 500;
@@ -124,8 +207,45 @@ const DescriptionText = styled.div`
   color: #191919;
 `;
 
+const PlaceInfoBox = styled.div`
+  justify-content: space-between;
+  display: flex;
+  border-top: 1px solid #191919;
+  border-bottom: 1px solid #191919;
+  margin-bottom: 23px;
+`;
+
 const PlaceContainer = styled.div``;
+
+const CategoryContainer = styled.div`
+  display: flex;
+`;
+
+const CategoryName = styled.div`
+  margin-top: 14px;
+  margin-left: 5px;
+  line-height: 20px;
+  text-align: center;
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  color: #878787;
+
+  width: 33px;
+  height: 20px;
+  background: #ededed;
+`;
+const ButtonContainer = styled.div`
+  border-left: 1px solid #191919;
+  width: 74px;
+  padding: 14px 0 0 19px;
+`;
+
 const PlaceName = styled.div`
+  margin-top: 12px;
+  padding-left: 3px;
+  padding-bottom: 4px;
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 700;
@@ -136,6 +256,8 @@ const PlaceName = styled.div`
   color: #191919;
 `;
 const PlaceAddress = styled.div`
+  margin-bottom: 12px;
+  padding-left: 3px;
   font-family: 'Pretendard';
   font-style: normal;
   font-weight: 400;
@@ -144,4 +266,7 @@ const PlaceAddress = styled.div`
 
   color: #6f6a69;
 `;
-const SelectedButton = styled.button``;
+const SelectedButton = styled.button`
+  width: 36px;
+  height: 36px;
+`;
