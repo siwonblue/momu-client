@@ -30,13 +30,14 @@ const Home: NextPage = ({ data }) => {
   // 서버사이드 유저 인증 과정
   useEffect(() => {
     // 닉네임은 설정했고 mbti 안하면
-    if (data.nickname && data.mbti !== '') {
-      router.push('/feed');
-    }
-    // 닉네임, mbti 모두 설정했으면
-    if (data.nickname && data.mbti === '') {
-      router.push('/profile/1');
-    }
+    // if (data.nickname && data.mbti !== '') {
+    //   router.push('/feed');
+    // }
+    // // 닉네임, mbti 모두 설정했으면
+    // if (data.nickname && data.mbti === '') {
+    //   router.push('/profile/1');
+    // }
+    console.log(data);
   }, [data]);
 
   const onChangeInput = useCallback(
@@ -106,56 +107,50 @@ const Home: NextPage = ({ data }) => {
 
   return (
     <>
-      {data ? (
-        <Spinner />
-      ) : (
-        <>
-          <SetProfileText>프로필 설정</SetProfileText>
-          <ServiceDescriptionText>
-            신촌, 홍대 지역 기반 맛집 큐레이션 서비스 모무입니다. 프로필 설정을
-            하고 모무에서 활동을 시작해보세요!
-          </ServiceDescriptionText>
-          <div style={NicknameText}>닉네임</div>
-          <form
-            onSubmit={onSubmit}
-            encType="multipart/form-data"
-            autoComplete="off"
-          >
-            <NicknameInput
-              value={nickname}
-              onChange={onChangeInput}
-              placeholder="10자 이내 영문으로 작성해주세요!"
-              required
+      <SetProfileText>프로필 설정</SetProfileText>
+      <ServiceDescriptionText>
+        신촌, 홍대 지역 기반 맛집 큐레이션 서비스 모무입니다. 프로필 설정을 하고
+        모무에서 활동을 시작해보세요!
+      </ServiceDescriptionText>
+      <div style={NicknameText}>닉네임</div>
+      <form
+        onSubmit={onSubmit}
+        encType="multipart/form-data"
+        autoComplete="off"
+      >
+        <NicknameInput
+          value={nickname}
+          onChange={onChangeInput}
+          placeholder="10자 이내 영문으로 작성해주세요!"
+          required
+        />
+        <ProfileImageText>프로필 사진</ProfileImageText>
+        <div style={ImagePositionBox}>
+          <div style={RelativeBox}>
+            <input
+              type="file"
+              id="image-upload"
+              hidden
+              onChange={handleImagePath}
+              pattern="[a-zA-Z0-9]"
             />
-            <ProfileImageText>프로필 사진</ProfileImageText>
-            <div style={ImagePositionBox}>
-              <div style={RelativeBox}>
-                <input
-                  type="file"
-                  id="image-upload"
-                  hidden
-                  onChange={handleImagePath}
-                  pattern="[a-zA-Z0-9]"
-                />
-                <label htmlFor="image-upload" style={labelStyle}>
-                  <Image width={25} height={20} src={camera}></Image>
-                </label>
-                <Image
-                  loader={myLoader}
-                  src={createObjectURL || defaultProfile}
-                  width={100}
-                  height={100}
-                  style={defaultImageStyle}
-                  objectFit="cover"
-                ></Image>
-              </div>
-            </div>
-            <NextButton active={active} disabled={!active}>
-              다음
-            </NextButton>
-          </form>
-        </>
-      )}
+            <label htmlFor="image-upload" style={labelStyle}>
+              <Image width={25} height={20} src={camera}></Image>
+            </label>
+            <Image
+              loader={myLoader}
+              src={createObjectURL || defaultProfile}
+              width={100}
+              height={100}
+              style={defaultImageStyle}
+              objectFit="cover"
+            ></Image>
+          </div>
+        </div>
+        <NextButton active={active} disabled={!active}>
+          다음
+        </NextButton>
+      </form>
     </>
   );
 };
