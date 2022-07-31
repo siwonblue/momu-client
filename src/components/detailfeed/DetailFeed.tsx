@@ -1,32 +1,42 @@
 import { RootState, useAppDispatch, useAppSelector } from 'store/store';
 import { getCurationByIdThunk } from '@slices/curation/detailCurationPostSlice';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import DetailFeedHeader from './DetailFeedHeader';
 import GetCurationCard from 'components/feed/GetCurationCard';
 import styled from 'styled-components';
 import { DivisionLine } from 'styles/commentstyle/CommentStyle';
+import { useRouter } from 'next/router';
+import { GetServerSideProps } from 'next';
 
 interface Props {
-  postId: string | string[] | undefined;
+  params: string | undefined;
 }
 
-const DetailFeedContents: FC<Props> = ({ postId }) => {
-  const post = parseInt(postId as string);
+const DetailFeedContents = ({ req }: any) => {
+  const router = useRouter();
+  console.log(req);
+  // console.log(postNum);
   const curation = useAppSelector(
     (state: RootState) => state.detailCuration.data
   );
-
+  // console.log(post);
   const dispatch = useAppDispatch();
 
+  // useEffect(() => {
+  //   // const post = parseInt(postId as string);
+  //
+  //   // dispatch(getCurationByIdThunk(postNum));
+  // }, []);
+
   useEffect(() => {
-    dispatch(getCurationByIdThunk(post));
-  }, []);
+    console.log('curation', curation);
+  }, [curation]);
 
   return (
     <>
       <CardWrapper>
         <GetCurationCard
-          key={curation.id + `new Date()`}
+          key={curation.id + `${new Date()}`}
           area={curation.location}
           isDrink={curation.drink}
           when={curation.time}
@@ -42,9 +52,21 @@ const DetailFeedContents: FC<Props> = ({ postId }) => {
           post={curation.id}
         />
       </CardWrapper>
-      <DivisionLine></DivisionLine>
+      <DivisionLine />
     </>
   );
+};
+
+//@ts-ignore
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  try {
+    const { req } = context;
+    return {
+      props: { req },
+    };
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export default DetailFeedContents;

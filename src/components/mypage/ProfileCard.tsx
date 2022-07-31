@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { RootState, useAppDispatch, useAppSelector } from 'store/store';
 import styled from 'styled-components';
 import Image from 'next/image';
+import defaultImage from '@public/img/defaultProfile.png';
 
 const ProfileCard = () => {
   const dispatch = useAppDispatch();
@@ -18,26 +19,17 @@ const ProfileCard = () => {
       <Wrapper>
         <ImgContainer>
           <ProfileImg>
-            {profileImg === null ? (
-              <Image
-                src={'/img/defaultProfile.png'}
-                width={'28'}
-                height={'28'}
-                objectFit="cover"
-              />
-            ) : (
-              <Image
-                src={profileImg}
-                width={'28'}
-                height={'28'}
-                objectFit="cover"
-              />
-            )}
+            <Image
+              src={profileImg || defaultImage}
+              width={80}
+              height={80}
+              objectFit="cover"
+            />
           </ProfileImg>
         </ImgContainer>
         <UserInfo>
           <UserName>{user?.nickname}</UserName>
-          <UserMbti>{user?.mbti}</UserMbti>
+          <UserMbti>{user?.mbti.mbti}</UserMbti>
         </UserInfo>
         <BottomInfo>
           <UserLevel>

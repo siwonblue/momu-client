@@ -22,7 +22,7 @@ const CommentList: FC<Props> = ({ postId }) => {
 
   useEffect(() => {
     dispatch(getCommentPostListsThunk({ hasNext, postId }));
-  }, []);
+  }, [commentLists.length]);
   const commentCount = commentLists.length;
 
   return (

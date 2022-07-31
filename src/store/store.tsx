@@ -18,6 +18,7 @@ import addCurationSliceReducer from '@slices/curation/addCurationSlice';
 import commentPostReducer from '@slices/comment/commentPostSlice';
 import selectReducer from '@slices/select/selectSlice';
 import mypageReducer from '@slices/mypage/mypageSlice';
+import addCommentReducer from '@slices/comment/addCommentSlice';
 
 const preloadedState = {};
 
@@ -26,6 +27,7 @@ export const store = configureStore({
     curation: curationReducer,
     postComments: commentPostReducer,
     comments: getPlaceReducer,
+    addcomment: addCommentReducer,
     placechoice: placeChoiceReducer,
     detailCuration: detailCurationReducer,
     addCuration: addCurationSliceReducer,
@@ -36,7 +38,7 @@ export const store = configureStore({
     profileSet: profileSetReducer,
     mypage: mypageReducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
+  // middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
   devTools: process.env.NODE_ENV !== 'production',
   preloadedState,
 });

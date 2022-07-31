@@ -13,21 +13,25 @@ import {
   HeaderLeftSide,
   Line,
 } from 'styles/headerstyle/HeaderCommonStyle';
+import axios from 'axios';
+import { tryParsePattern } from 'next/dist/build/webpack/plugins/jsconfig-paths-plugin';
+import useImage from '../../utils/hooks/useImage';
+import Image from 'next/image';
+import { resetPlaceData } from '@slices/comment/PlaceChoiceSlice';
+import { addCommentThunk } from '@slices/comment/addCommentSlice';
 
 const AddComment = () => {
-  const { additionalComment, handleInputLength } = useCheckLength();
+  const { description, handleInputLength } = useCheckLength();
   const router = useRouter();
-  // isSelected true이면 input 텍스트, 모달 클로즈,
-  const isSelected = useAppSelector(
-    (state: RootState) => state.placechoice.isSelected
-  );
+  const nullText = '';
 
   //input에서 placeName보여주기
   const placeName = useAppSelector(
     (state: RootState) => state.placechoice.place.place_name
   );
-  const place = useAppSelector((state: RootState) => state.placechoice.place);
-  console.log(place);
+  const place_id = useAppSelector(
+    (state: RootState) => state.placechoice.place.id
+  );
 
   const [text, setText] = useState('');
   useEffect(() => {
@@ -38,44 +42,31 @@ const AddComment = () => {
   const dispatch = useAppDispatch();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [whereToGo, setWhereToGo] = useState('');
-  const [keyword, setWhere] = useState('');
+  const [where, setWhere] = useState('');
+  const { imagePath, createObjectURL, handleImagePath } = useImage();
 
-  const [imagePath, setImagePath] = useState('');
-  const [createObjectURL, setCreateObjectURL] = useState(null);
-
-  //이미지 업로드를 위한 코드
-  const onChangeImages = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      //@ts-ignore
-      const [file] = e.target.files;
-      // @ts-ignore
-      setCreateObjectURL(URL.createObjectURL(file));
-    },
-    []
-  );
   const post = router.query.id;
   const postId = parseInt(post as string);
 
-  console.log(postId);
+  console.log(imagePath);
 
   //모든 데이터 입력 후에 완료 버튼 누르면 formData 전송.
-  const onSubmit = () => {
-    const comment = new FormData();
-    comment.append('image', imagePath);
-    //@ts-ignore
-    comment.append('place', place);
-    comment.append('additionalComment', additionalComment);
+  const onSubmit = async (e: React.SyntheticEvent) => {
+    if (placeName === '') {
+      alert('식당을 선택해주세요!');
+    } else {
+      router.push(`/feed/${postId}`);
+      e.preventDefault();
 
-    for (const [name, value] of comment) {
-      console.log(`🍓name : ${name}`);
-      console.log(` 🍓value: ${value}`);
+      const formData = new FormData();
+      formData.append('place_id', place_id);
+      formData.append('place_img', imagePath);
+      formData.append('description', description);
+
+      dispatch(addCommentThunk({ formData, postId }));
     }
 
-    //const comment=useAppSelector((state:RootState)=>)
-    //const comment = Object.assign(place:{place}, formData, additionalComment);
-    //console.log(comment);
-
-    //dispatch(addCommentThunk({ postId, comment }));
+    dispatch(resetPlaceData({ nullText }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -86,14 +77,11 @@ const AddComment = () => {
     setWhereToGo(value);
   };
 
-  console.log(additionalComment);
-
   const onSubmitPlace = useCallback(
     (e: React.SyntheticEvent) => {
       e.preventDefault();
       setWhereToGo('');
       setWhere(whereToGo);
-
       setIsOpen(true);
     },
     [whereToGo]
@@ -103,21 +91,24 @@ const AddComment = () => {
     setIsOpen(false);
     setText('');
   }
-
-  console.log(keyword);
-
   useEffect(() => {
-    dispatch(getPlaceDatasThunk(keyword));
-  }, [keyword]);
+    if (where !== '') {
+      dispatch(getPlaceDatasThunk(where));
+    }
+  }, [where]);
 
-  console.log(placeDatas);
+  const onClickBack = () => {
+    router.back();
+    dispatch(resetPlaceData({ nullText }));
+    setText('');
+  };
 
   return (
     <Wrapper>
       <>
         <HeaderContainer>
           <HeaderLeftSide>
-            <BackButton onClick={() => router.back()}>
+            <BackButton onClick={onClickBack}>
               <BackIcon src={'/img/header/backbutton.svg'} />
             </BackButton>
           </HeaderLeftSide>
@@ -139,12 +130,12 @@ const AddComment = () => {
       <InnerContainer>
         <GuideText>사진 (선택)</GuideText>
         <ImageWrapper>
-          <form action="">
+          <form>
             <ImgUploadInput
               type="file"
               id="image-upload"
               hidden
-              onChange={onChangeImages}
+              onChange={handleImagePath}
               pattern="[a-zA-Z0-9]"
             />
             <label
@@ -173,7 +164,7 @@ const AddComment = () => {
             handleInputLength(e, 35);
           }}
           placeholder="자세하게 적어줄 수록 채택확률이 높아요!&#13;(최대 38자)"
-          value={additionalComment}
+          value={description}
         ></CommentTextInput>
       </InnerContainer>
 
@@ -228,6 +219,7 @@ const UploadedImg = styled.img`
   top: 0px;
   width: 343px;
   height: 206px;
+  object-fit: cover;
 `;
 const ImageUploadArea = styled.div`
   padding-top: 70px;
@@ -343,4 +335,8 @@ const SubmitButton = styled.button`
 
   color: #999999;
   margin-right: 24px;
+
+  &:hover {
+    color: #f57a08;
+  }
 `;

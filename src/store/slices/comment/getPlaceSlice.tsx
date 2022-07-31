@@ -3,6 +3,8 @@ import { IGetPlaceData } from 'utils/interfaces/comment/commentInterface';
 import axios from 'axios';
 
 const initialState: IGetPlaceData = {
+  status: '',
+  error: '',
   pending: false,
   message: '',
   data: [],
@@ -18,7 +20,7 @@ export const getPlaceDatasThunk = createAsyncThunk(
   }
 );
 
-export const getCommentSlice = createSlice({
+export const getPlaceSlice = createSlice({
   name: 'comments',
   initialState,
   reducers: {},
@@ -41,4 +43,4 @@ export const getCommentSlice = createSlice({
   },
 });
 
-export default getCommentSlice.reducer;
+export default getPlaceSlice.reducer;

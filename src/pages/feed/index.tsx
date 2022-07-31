@@ -28,32 +28,29 @@ const Feed: NextPage = () => {
   //   }
   // }, [me]);
 
-  const onScroll = useCallback(
-    (e: any) => {
-      const a = e.target.scrollTop;
-      const b = e.target.scrollHeight - e.target.clientHeight;
-      const percent = Math.round((a / b) * 100);
-
-      if (percent >= 90) {
-        setHasNext(true);
-        setPercent(percent);
-      } else {
-        setHasNext(false);
-      }
-    },
-    [percent, hasNext]
-  );
+  const onScroll = (e: any) => {
+    const a = e.target.scrollTop;
+    const b = e.target.scrollHeight - e.target.clientHeight;
+    const percent = Math.round((a / b) * 100);
+    console.log('🔥🔥🔥🔥', percent);
+    if (percent >= 90) {
+      setHasNext(true);
+      setPercent(percent);
+    } else {
+      setHasNext(false);
+    }
+  };
 
   return (
-    <Wrapper>
+    <Wrapper onScroll={() => alert('hi')}>
       <MainFeed />
       <SliderContainer className="sticky top-0">
         <FeedHeader />
       </SliderContainer>
-      <FeedContainer onScroll={onScroll}>
+      <FeedContainer>
         <FeedList hasNext={hasNext} percent={percent} />
       </FeedContainer>
-      <NavContainer className="sticky bottom-0">
+      <NavContainer className="fixed">
         <NavBar />
       </NavContainer>
     </Wrapper>
@@ -64,12 +61,18 @@ export default Feed;
 
 const Wrapper = styled.div``;
 const FeedContainer = styled.div`
-  height: 812px;
   background: #ffffff;
-  overflow: auto;
+  margin-bottom: 85px;
 `;
 
 const SliderContainer = styled.div`
   background: #ffffff;
+  z-index: 1;
 `;
-const NavContainer = styled.div``;
+const NavContainer = styled.div`
+  width: 343px;
+  &.fixed {
+    position: fixed;
+    top: 740px;
+  }
+`;

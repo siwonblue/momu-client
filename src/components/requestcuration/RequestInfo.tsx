@@ -23,8 +23,7 @@ import { onChangeLocation } from 'utils/common/onChangeLocation';
 const RequestInfo = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { additionalComment, handleInputLength } = useCheckLength();
-  const [text, setText] = useState('');
+  const { description, handleInputLength } = useCheckLength();
 
   const { sinchon } = useSelector(
     (state: RootState) => state.addCuration.location
@@ -65,24 +64,22 @@ const RequestInfo = () => {
     dispatch(addCurationSlice.actions.resetActiveInTime());
     dispatch(addCurationSlice.actions.resetActiveInDrink());
     dispatch(addCurationSlice.actions.resetActiveInCount());
-
-    setText('');
   };
 
   const onChangeDescription = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       handleInputLength(e, 25);
 
-      setText(e.target.value);
+      // setText(e.target.value);
     },
 
-    [text]
+    [description]
   );
 
   // 분리 해줘야 description 데이터 넘어감
   useEffect(() => {
-    dispatch(addCurationSlice.actions.onClickComplete(text));
-  }, [text]);
+    dispatch(addCurationSlice.actions.onClickComplete(description));
+  }, [description]);
 
   const onClickSubmit = (e: React.SyntheticEvent) => {
     if (data.location === '') {
@@ -94,14 +91,10 @@ const RequestInfo = () => {
 
     dispatch(addCurationData(data));
 
-    if (status === 'success') {
-      router.push('/feed');
-    }
+    router.push('/feed');
 
     resetState();
   };
-
-  console.log(data);
 
   const onClickBackButton = () => {
     router.back();
@@ -255,7 +248,7 @@ const RequestInfo = () => {
             onChange={onChangeDescription}
             type="text"
             placeholder="(25자 이내) 싫어하는 음식, 상황 등을 말씀해주세요!"
-            value={text}
+            value={description}
           />
         </AdditionalRequest>
       </Wrapper>
@@ -373,4 +366,7 @@ const SubmitButton = styled.button`
 
   color: #999999;
   margin-right: 24px;
+  &:hover {
+    color: #f57a08;
+  }
 `;

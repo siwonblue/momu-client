@@ -22,6 +22,8 @@ interface IPlaceObject {
 
 interface IGetPlaceData {
   pending: boolean;
+  status: any;
+  error: any;
   message: string;
   data: IPlaceData[];
   page: number;
@@ -76,6 +78,11 @@ interface ICommentThunkProps {
   postId: number;
 }
 
+interface IAddCommentProps {
+  formData: any;
+  postId: number;
+}
+
 export type {
   IPlaceData,
   IGetPlaceData,
@@ -83,4 +90,5 @@ export type {
   ICommentPost,
   ICommentPostLists,
   ICommentThunkProps,
+  IAddCommentProps,
 };
