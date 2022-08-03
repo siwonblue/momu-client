@@ -1,10 +1,18 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { ISelectedInfo, ISelectState } from 'utils/select/selectinterface';
+import {
+  ISelectedInfo,
+  ISelectState,
+} from 'utils/interfaces/select/selectinterface';
 
 const initialState: ISelectState = {
   message: '',
   pending: false,
+  curationDone: false,
+  isSelected: false,
+  selectedCommentId: null,
+  postError: null,
+  deleteError: null,
 };
 
 export const postSelectedStateThunk = createAsyncThunk(
@@ -30,7 +38,11 @@ export const deleteSelectedStateThunk = createAsyncThunk(
 export const selectSlice = createSlice({
   name: 'select',
   initialState,
-  reducers: {},
+  reducers: {
+    setSelectedCommentId: (state, action) => {
+      state.selectedCommentId = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(postSelectedStateThunk.pending, (state) => {
@@ -42,18 +54,22 @@ export const selectSlice = createSlice({
       .addCase(postSelectedStateThunk.fulfilled, (state, action) => {
         state.message = action.payload;
         state.pending = false;
+        state.isSelected = true;
+        state.curationDone = true;
       })
       .addCase(deleteSelectedStateThunk.fulfilled, (state, action) => {
         state.message = action.payload;
         state.pending = false;
+        state.isSelected = false;
+        state.curationDone = false;
       })
       .addCase(postSelectedStateThunk.rejected, (state, action) => {
-        state.message = action.payload;
         state.pending = false;
+        state.postError = action.payload;
         console.error(action.error);
       })
       .addCase(deleteSelectedStateThunk.rejected, (state, action) => {
-        state.message = action.payload;
+        state.deleteError = action.payload;
         state.pending = false;
         console.error(action.error);
       });

@@ -1,3 +1,4 @@
+import React from 'react';
 import { FC, useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image';
@@ -6,6 +7,7 @@ import { RootState, useAppDispatch, useAppSelector } from 'store/store';
 import {
   postSelectedStateThunk,
   deleteSelectedStateThunk,
+  selectSlice,
 } from '@slices/select/selectSlice';
 import { userInfo } from '@slices/user/userThunk';
 import defaultImage from '@public/img/defaultProfile.png';
@@ -13,8 +15,14 @@ import selectedButton from '@public/img/select/SelectedButton.svg';
 import unselectedButton from '@public/img/select/unSelectedButton.svg';
 import otherUserSelectedButton from '@public/img/select/OtherUserSelectedButton.svg';
 import line from '@public/img/Line.png';
+import {
+  detailCurationPostSlice,
+  getCurationByIdThunk,
+} from '@slices/curation/detailCurationPostSlice';
+import { useSelector } from 'react-redux';
 
 interface Props {
+  curationSelectedFlag: boolean;
   userId: number;
   commentId: number;
   postId: number;
@@ -28,6 +36,7 @@ interface Props {
   placeAddress: string;
   placeCategory: string;
   createAt: string;
+  sameUser: boolean | null;
 }
 
 const CommentCard: FC<Props> = ({
@@ -44,35 +53,82 @@ const CommentCard: FC<Props> = ({
   placeAddress,
   placeCategory,
   createAt,
+  curationSelectedFlag,
+  sameUser,
 }) => {
   const [selectedState, setSelectedState] = useState(selectedFlag);
+  const [result, setResult] = useState<null | boolean>(null);
+  const [final, setFinal] = useState<null | boolean>(null);
   const dispatch = useAppDispatch();
-  const user = useAppSelector((state: RootState) => state.user.me.data.id);
-  const test = useAppSelector((state: RootState) => state.user);
-  console.log('test🥶', test);
-  function ButtonChoice() {
-    if (selectedState === true && user === userId) {
-      return <Image src={selectedButton} />;
-    } else if (selectedState === false && user === userId) {
-      return <Image src={unselectedButton} />;
+  // useEffect(() => {
+  //   dispatch(userInfo());
+  // }, []);
+  const user = useAppSelector((state: RootState) => state.user.me.data?.id);
+  const selectedCommentId = useSelector(
+    (state: RootState) => state.select.selectedCommentId
+  );
+  // 질문 글을 쓴 유저 아이디
+  const questionUserId = useAppSelector(
+    (state: RootState) => state.detailCuration.data.user.id
+  );
+  const postError = useAppSelector(
+    (state: RootState) => state.select.postError
+  );
+  const deleteError = useAppSelector(
+    (state: RootState) => state.select.deleteError
+  );
+
+  // const testFlag = useAppSelector((state:RootState)=>state.)
+
+  const onClick = () => {
+    if (user != questionUserId) {
+      return alert('큐레이션 작성자만 가능합니다.');
     }
-    if (selectedState === true && user !== userId) {
-      return <Image src={otherUserSelectedButton} />;
-    } else if (selectedState === false && user !== userId) {
-      return <></>;
+    if (!curationSelectedFlag) {
+      const ask = confirm('이 게시물을 채택하시겠습니까?');
+      if (ask) {
+        setSelectedState(true);
+        dispatch(selectSlice.actions.setSelectedCommentId(commentId));
+        dispatch(detailCurationPostSlice.actions.setCurationDone(true));
+        dispatch(postSelectedStateThunk({ postId, commentId }));
+      }
+    } else {
+      const ask = confirm('채택을 취소하시겠습니까?');
+      if (ask) {
+        setSelectedState(false);
+        dispatch(detailCurationPostSlice.actions.setCurationDone(false));
+        dispatch(deleteSelectedStateThunk({ postId, commentId }));
+      }
+    }
+  };
+
+  // useEffect(() => {
+  //   if (commentId === selectedCommentId) {
+  //     setResult(true);
+  //   }
+  // }, [selectedCommentId]);
+
+  function TestFunction() {
+    if (commentId === selectedCommentId) {
+      return (
+        <SelectedButton onClick={onClick}>
+          <OtherUserSelcted>
+            <Image src={otherUserSelectedButton} />
+          </OtherUserSelcted>
+        </SelectedButton>
+      );
+    }
+    if (selectedFlag) {
+      // 새로고침하면 얘로 시작
+      return (
+        <SelectedButton onClick={onClick}>
+          <OtherUserSelcted>
+            <Image src={otherUserSelectedButton} />
+          </OtherUserSelcted>
+        </SelectedButton>
+      );
     }
   }
-
-  const onClick = useCallback(() => {
-    if (selectedState === true && user === userId) {
-      setSelectedState(false);
-    } else if (selectedState === false && user === userId)
-      setSelectedState(true);
-    if (selectedState === true && user === userId) {
-      dispatch(deleteSelectedStateThunk({ postId, commentId }));
-    } else if (selectedState === false && user === userId)
-      dispatch(postSelectedStateThunk({ postId, commentId }));
-  }, [selectedState]);
 
   return (
     <>
@@ -127,9 +183,14 @@ const CommentCard: FC<Props> = ({
               <PlaceAddress>{placeAddress}</PlaceAddress>
             </PlaceContainer>
             <ButtonContainer>
-              <SelectedButton onClick={onClick}>
-                {ButtonChoice()}
-              </SelectedButton>
+              {curationSelectedFlag
+                ? TestFunction()
+                : user == questionUserId &&
+                  questionUserId != userId && (
+                    <SelectedButton onClick={onClick}>
+                      <Image src={unselectedButton} />
+                    </SelectedButton>
+                  )}
             </ButtonContainer>
           </PlaceInfoBox>
         </BottomContainer>
@@ -139,11 +200,19 @@ const CommentCard: FC<Props> = ({
   );
 };
 
+// selectedFlag && (
+//   <SelectedButton onClick={onClick}>
+//     <OtherUserSelcted>
+//       <Image src={otherUserSelectedButton} />
+//     </OtherUserSelcted>
+//   </SelectedButton>
+// )
+
 export default CommentCard;
 
 const Wrapper = styled.div``;
 const PlaceImgContainer = styled.div`
-  padding-top: 23px;
+  margin-top: 23px;
 `;
 const BottomContainer = styled.div``;
 
@@ -234,8 +303,7 @@ const CategoryName = styled.div`
   font-weight: 500;
   font-size: 12px;
   color: #878787;
-
-  width: 33px;
+  padding: 0 6px;
   height: 20px;
   background: #ededed;
 `;
@@ -273,3 +341,10 @@ const SelectedButton = styled.button`
   width: 36px;
   height: 36px;
 `;
+
+const OtherUserSelcted = styled.div`
+  margin-top: 3px;
+`;
+function componentDidMount() {
+  throw new Error('Function not implemented.');
+}

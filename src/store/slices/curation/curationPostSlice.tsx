@@ -19,6 +19,7 @@ const initialState: ICurationPostLists = {
   status: '',
   error: null,
   cursor: null,
+  pending: false,
 };
 
 // [
@@ -54,6 +55,8 @@ export const getCurationPostListsThunk = createAsyncThunk(
   'curation/getCurationPostLists',
   async (_, { rejectWithValue }) => {
     try {
+      const access_token = localStorage.getItem('access_token');
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       const response = await axios.get('/feed/');
       return response.data;
     } catch (error) {
@@ -90,6 +93,7 @@ export const curationPostSlice = createSlice({
       })
       .addCase(getMoreCurationPostListsThunk.pending, (state) => {
         state.status = 'pending';
+        state.pending = true;
       })
       .addCase(getCurationPostListsThunk.fulfilled, (state, action) => {
         state.message = action.payload.message;
@@ -103,10 +107,13 @@ export const curationPostSlice = createSlice({
         state.status = 'success';
       })
       .addCase(getMoreCurationPostListsThunk.fulfilled, (state, action) => {
+        state.data.next = action.payload.data.next;
+        state.data.previous = action.payload.data.previous;
         state.data.results = state.data.results.concat(
           action.payload.data.results
         );
         state.status = 'success';
+        state.pending = false;
       })
       .addCase(getCurationPostListsThunk.rejected, (state, action) => {
         state.status = 'rejected';

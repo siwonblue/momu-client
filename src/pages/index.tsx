@@ -9,31 +9,36 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { userInfo } from '@slices/user/userThunk';
 import { useEffect } from 'react';
-import Spinner from '@common/Spinner';
+import Image from 'next/image';
+import kakaoLogo from '@public/img/landing/kakaoLogo.png';
 import axios from 'axios';
-import { useSelector } from 'react-redux';
 
 // @ts-ignore
 const Home: NextPage = ({ data, cookie }) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
+  // const me = useAppSelector((state: RootState) => state.user.me);
+  // useEffect(() => {
+  //   dispatch(userInfo());
+  // }, []);
+
   // SSR 방식
-  useEffect(() => {
-    // if (data.message === 'Request failed with status code 401') {
-    //   data = null;
-    //   return;
-    // }
-    if (data.nickname === null) {
-      router.push('/profile');
-    }
-    if (data.nickname && data.mbti === null) {
-      router.push('/profile/1');
-    }
-    if (data.nickname && data.mbti) {
-      router.push('/feed');
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   // if (data.message === 'Request failed with status code 401') {
+  //   //   data = null;
+  //   //   return;
+  //   // }
+  //   if (data.nickname === null) {
+  //     router.push('/profile');
+  //   }
+  //   if (data.nickname && data.mbti === null) {
+  //     router.push('/profile/1');
+  //   }
+  //   if (data.nickname && data.mbti) {
+  //     router.push('/feed');
+  //   }
+  // }, [data]);
 
   useEffect(() => {
     console.log('data🔥🔥', data);
@@ -41,45 +46,82 @@ const Home: NextPage = ({ data, cookie }) => {
   }, [data, cookie]);
 
   return (
-    <>
-      <div
-        style={{
-          textAlign: 'center',
-          border: '1px dotted blackCurationPostLists',
-          marginTop: '100px',
-        }}
+    <Wrapper>
+      <Text>뭐 먹을지 고민될 땐</Text>
+      <Logo></Logo>
+      <ServiceDescription>
+        신촌 지역 기반 맛집 큐레이션 서비스 모무
+      </ServiceDescription>
+
+      <KakaoButton
+        onClick={() =>
+          router.push(
+            `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}&redirect_uri=${process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI}`
+          )
+        }
       >
-        <h1>❌모무데브 개발 중❌</h1>
-        <button
-          onClick={() => router.push('/profile/1')}
-          style={{ marginBottom: '20px' }}
-        >
-          누르면 먹비티아이로 넘어가는 버튼
-        </button>
-        <button onClick={() => router.push('/feed')}>
-          누르면 피드로 넘어가는 버튼
-        </button>
-        <div>dd</div>
-        <KakaoButton
-          onClick={() =>
-            router.push(
-              `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}&redirect_uri=${process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI}`
-            )
-          }
-        >
-          <KakaoText>카카오 로그인</KakaoText>
-        </KakaoButton>
-      </div>
-    </>
+        <LogoContainer>
+          <Image src={kakaoLogo} width={28} height={28} />
+        </LogoContainer>
+        <KakaoText>카카오 로그인</KakaoText>
+      </KakaoButton>
+    </Wrapper>
   );
 };
 
+const Wrapper = styled.div`
+  height: 100vh;
+  @supports (-webkit-touch-callout: none) {
+    height: -webkit-fill-available;
+  }
+  width: calc(100% + 16px * 2);
+  margin: 0 16px 0 -16px;
+  background-image: url('/img/landing/Landing.png');
+  background-size: 100% 100%;
+`;
+
+const Text = styled.div`
+  padding-top: 240px;
+  padding-left: 32px;
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 700;
+  font-size: 28px;
+  color: #000000;
+`;
+const Logo = styled.div`
+  width: 113px;
+  height: 27px;
+  margin-left: 32px;
+  margin-top: 16px;
+  background-image: url('/img/landing/Logo.png');
+  background-size: 100% 100%;
+`;
+const ServiceDescription = styled.div`
+  padding-left: 32px;
+  padding-top: 30px;
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  /* identical to box height, or 14px */
+
+  color: #000000;
+`;
+
+const LogoContainer = styled.div`
+  width: 28px;
+  height: 28px;
+  margin-left: 100px;
+`;
+
 const KakaoButton = styled.button`
+  margin-top: 250px;
+  margin-left: 16px;
   position: absolute;
   width: 343px;
   height: 56px;
-  left: 16px;
-  top: 656px;
 
   background: #ffe812;
 `;

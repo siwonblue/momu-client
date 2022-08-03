@@ -19,7 +19,7 @@ import useImage from '../../utils/hooks/useImage';
 import Spinner from '@common/Spinner';
 
 // @ts-ignore
-const Home: NextPage = ({ data }) => {
+const Home: NextPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [nickname, setNickname] = useState('');
@@ -28,27 +28,31 @@ const Home: NextPage = ({ data }) => {
   const { imagePath, createObjectURL, handleImagePath } = useImage();
   const message = useAppSelector((state: RootState) => state.profileSet.result);
 
+  const me = useAppSelector((state: RootState) => state.user.me);
   useEffect(() => {
-    console.log('🔥message🔥', message);
+    dispatch(userInfo());
+  }, []);
+
+  useEffect(() => {
     if (message === '프로필 설정 성공') {
       router.push('/profile/1');
     }
   }, [message]);
 
   // 서버사이드 유저 인증 과정
-  useEffect(() => {
-    // 닉네임은 설정했고 mbti 안하면
-    // if (data?.data?.nickname && data?.data?.mbti !== '') {
-    //   router.push('/feed');
-    // }
-    // // 닉네임, mbti 모두 설정했으면
-    // if (data?.data?.nickname && data?.data?.mbti === '') {
-    //   router.push('/profile/1');
-    // }
-    // if (data?.data?.nickname) {
-    //   router.push('/profile/1');
-    // }
-  }, []);
+  // useEffect(() => {
+  // 닉네임은 설정했고 mbti 안하면
+  // if (data?.data?.nickname && data?.data?.mbti !== '') {
+  //   router.push('/feed');
+  // }
+  // // 닉네임, mbti 모두 설정했으면
+  // if (data?.data?.nickname && data?.data?.mbti === '') {
+  //   router.push('/profile/1');
+  // }
+  // if (data?.data?.nickname) {
+  //   router.push('/profile/1');
+  // }
+  // }, []);
 
   const onChangeInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,6 +278,7 @@ export const getServerSideProps = wrapper.getServerSideProps(
   (store) =>
     async ({ req, res }) => {
       const cookie = req ? req.headers.cookie : '';
+      axios.defaults.headers.common['Cookie'] = '';
       if (cookie && req) {
         axios.defaults.headers.common['Cookie'] = cookie;
       }

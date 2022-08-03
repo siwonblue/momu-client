@@ -1,9 +1,13 @@
 import { RootState, useAppDispatch, useAppSelector } from 'store/store';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-import Modal from 'react-modal';
+// import Modal from 'react-modal';
+import Modal from '@common/Modal';
 import styled from 'styled-components';
-import { getPlaceDatasThunk } from '@slices/comment/getPlaceSlice';
+import {
+  getPlaceDatasThunk,
+  getPlaceSlice,
+} from '@slices/comment/getPlaceSlice';
 import PlaceLists from './PlaceLists';
 import useCheckLength from 'utils/hooks/useCheckLength';
 import {
@@ -19,6 +23,8 @@ import useImage from '../../utils/hooks/useImage';
 import Image from 'next/image';
 import { resetPlaceData } from '@slices/comment/PlaceChoiceSlice';
 import { addCommentThunk } from '@slices/comment/addCommentSlice';
+import { modalSlice } from '@slices/Modal/modalSlice';
+import ResetInputButton from '@public/img/search/ResetInput.png';
 
 const AddComment = () => {
   const { description, handleInputLength } = useCheckLength();
@@ -32,6 +38,9 @@ const AddComment = () => {
   const place_id = useAppSelector(
     (state: RootState) => state.placechoice.place.id
   );
+  const searchModalState = useAppSelector(
+    (state: RootState) => state.modal.searchModal
+  );
 
   const [text, setText] = useState('');
   useEffect(() => {
@@ -43,12 +52,16 @@ const AddComment = () => {
   const [modalIsOpen, setIsOpen] = useState(false);
   const [whereToGo, setWhereToGo] = useState('');
   const [where, setWhere] = useState('');
-  const { imagePath, createObjectURL, handleImagePath } = useImage();
+  const {
+    imagePath,
+    createObjectURL,
+    handleImagePath,
+    setImagePath,
+    setCreateObjectURL,
+  } = useImage();
 
   const post = router.query.id;
   const postId = parseInt(post as string);
-
-  console.log(imagePath);
 
   //모든 데이터 입력 후에 완료 버튼 누르면 formData 전송.
   const onSubmit = async (e: React.SyntheticEvent) => {
@@ -77,22 +90,23 @@ const AddComment = () => {
     setWhereToGo(value);
   };
 
+  const toggleSearchModal = () => {
+    dispatch(modalSlice.actions.searchModalToggle());
+  };
+
   const onSubmitPlace = useCallback(
     (e: React.SyntheticEvent) => {
       e.preventDefault();
       setWhereToGo('');
       setWhere(whereToGo);
-      setIsOpen(true);
+      dispatch(modalSlice.actions.searchModalToggle());
     },
     [whereToGo]
   );
 
-  function closeModal() {
-    setIsOpen(false);
-    setText('');
-  }
   useEffect(() => {
     if (where !== '') {
+      dispatch(getPlaceSlice.actions.setKeyword(where));
       dispatch(getPlaceDatasThunk(where));
     }
   }, [where]);
@@ -102,6 +116,32 @@ const AddComment = () => {
     dispatch(resetPlaceData({ nullText }));
     setText('');
   };
+
+  const showInputReset = () => {
+    if (text) {
+      return <Image src={ResetInputButton} width={24} height={24} />;
+    } else {
+      return <></>;
+    }
+  };
+
+  const showImgReset = () => {
+    if (imagePath) {
+      return <Image src={ResetInputButton} width={24} height={24} />;
+    } else {
+      return <></>;
+    }
+  };
+
+  const ResetInput = useCallback(() => {
+    setText('');
+    dispatch(resetPlaceData({ nullText }));
+  }, []);
+
+  const ResetImg = useCallback(() => {
+    setImagePath('');
+    setCreateObjectURL(null);
+  }, []);
 
   return (
     <Wrapper>
@@ -126,6 +166,7 @@ const AddComment = () => {
             value={text}
           ></PlaceInput>
         </form>
+        <ResetButton onClick={ResetInput}>{showInputReset()}</ResetButton>
       </SearchPlace>
       <InnerContainer>
         <GuideText>사진 (선택)</GuideText>
@@ -155,6 +196,7 @@ const AddComment = () => {
               </ImageUploadArea>
             </label>
           </form>
+          <ImgResetButton onClick={ResetImg}>{showImgReset()}</ImgResetButton>
         </ImageWrapper>
       </InnerContainer>
       <InnerContainer>
@@ -168,36 +210,20 @@ const AddComment = () => {
         ></CommentTextInput>
       </InnerContainer>
 
-      <div style={{ position: 'relative' }}>
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={{
-            overlay: {
-              background: 'none',
-            },
-            content: {
-              position: 'absolute',
-              width: '343px',
-              height: '743px',
-              top: '-35px',
-
-              margin: 'auto',
-            },
-          }}
-        >
-          <button onClick={closeModal}>
+      {searchModalState && (
+        <Modal>
+          <button onClick={toggleSearchModal}>
             <ButtonContainer>
               <img src={'/img/modal/closeButton.svg'} />
             </ButtonContainer>
           </button>
           <PlaceLists
             text={text}
-            closeModal={closeModal}
+            closeModal={toggleSearchModal}
             placeDatas={placeDatas}
           />
         </Modal>
-      </div>
+      )}
     </Wrapper>
   );
 };
@@ -233,6 +259,7 @@ const ImageUploadArea = styled.div`
 `;
 
 const PlaceInput = styled.input`
+  padding-right: 40px;
   padding-left: 45px;
   font-family: 'Pretendard';
   font-style: normal;
@@ -258,8 +285,29 @@ const PlaceInput = styled.input`
 
     color: #767676;
   }
+
+  //&:focus {
+  //  outline: none;
+  //  border: none;
+  //  //border: 1px solid red;
+  //}
 `;
 
+const ImgResetButton = styled.button`
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 335px;
+  top: 262px;
+  z-index: 2;
+`;
+const ResetButton = styled.button`
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 325px;
+  top: 153px;
+`;
 const SearchPlace = styled.div`
   padding-top: 36px;
 `;
