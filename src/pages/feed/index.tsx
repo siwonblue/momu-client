@@ -25,6 +25,10 @@ const Feed: NextPage = ({ data }: any) => {
   }, []);
 
   useEffect(() => {
+    console.log('me in feed', me);
+  }, []);
+
+  useEffect(() => {
     if (me.data?.id && (!me.data?.mbti || !me.data?.nickname)) {
       router.push('/profile').then((r) =>
         toast('설정이 필요합니다.', {
